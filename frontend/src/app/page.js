@@ -1,101 +1,185 @@
-import Image from "next/image";
+"use client"
+
+import { useState, useEffect } from 'react'
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+
+// Card values and suits for the deck
+const SUITS = ['♠', '♥', '♦', '♣']
+const VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [playerDeck, setPlayerDeck] = useState([])
+  const [computerDeck, setComputerDeck] = useState([])
+  const [playerCard, setPlayerCard] = useState(null)
+  const [computerCard, setComputerCard] = useState(null)
+  const [gameStatus, setGameStatus] = useState('Press Start to begin')
+  const [scores, setScores] = useState({ player: 0, computer: 0 })
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Initialize and shuffle deck
+  const initializeDeck = () => {
+    let deck = []
+    for (let suit of SUITS) {
+      for (let value of VALUES) {
+        deck.push({ suit, value })
+      }
+    }
+    // Shuffle
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[deck[i], deck[j]] = [deck[j], deck[i]]
+    }
+    return deck
+  }
+
+  // Start new game
+  const startGame = () => {
+    const deck = initializeDeck()
+    const halfDeck = Math.ceil(deck.length / 2)
+    setPlayerDeck(deck.slice(0, halfDeck))
+    setComputerDeck(deck.slice(halfDeck))
+    setPlayerCard(null)
+    setComputerCard(null)
+    setScores({ player: 0, computer: 0 })
+    setGameStatus('Game started! Draw a card.')
+  }
+
+  // Draw cards
+  const drawCards = () => {
+    if (playerDeck.length === 0) {
+      setGameStatus('Game Over!')
+      return
+    }
+
+    const pCard = playerDeck[0]
+    const cCard = computerDeck[0]
+    
+    setPlayerCard(pCard)
+    setComputerCard(cCard)
+    
+    setPlayerDeck(playerDeck.slice(1))
+    setComputerDeck(computerDeck.slice(1))
+
+    // Compare cards
+    const result = compareCards(pCard, cCard)
+    updateScore(result)
+  }
+
+  // Compare cards to determine winner
+  const compareCards = (playerCard, computerCard) => {
+    const cardValues = {
+      '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8,
+      '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14
+    }
+    
+    if (cardValues[playerCard.value] > cardValues[computerCard.value]) {
+      setGameStatus('You win this round!')
+      return 'player'
+    } else if (cardValues[playerCard.value] < cardValues[computerCard.value]) {
+      setGameStatus('Computer wins this round!')
+      return 'computer'
+    } else {
+      setGameStatus('It\'s a tie!')
+      return 'tie'
+    }
+  }
+
+  // Update score
+  const updateScore = (winner) => {
+    if (winner === 'player') {
+      setScores(prev => ({ ...prev, player: prev.player + 1 }))
+    } else if (winner === 'computer') {
+      setScores(prev => ({ ...prev, computer: prev.computer + 1 }))
+    }
+  }
+
+  return (
+    <main className="min-h-screen p-8 bg-gradient-to-b from-slate-900 to-slate-800">
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-bold text-white">Card War</h1>
+          <p className="text-slate-300">{gameStatus}</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+
+        {/* Score Display */}
+        <div className="flex justify-center gap-8">
+          <Badge variant="outline" className="text-lg px-4 py-2">
+            Player: {scores.player}
+          </Badge>
+          <Badge variant="outline" className="text-lg px-4 py-2">
+            Computer: {scores.computer}
+          </Badge>
+        </div>
+
+        {/* Game Board */}
+        <div className="grid grid-cols-2 gap-8">
+          {/* Player Side */}
+          <div className="space-y-4">
+            <h2 className="text-xl text-center text-white">Your Card</h2>
+            <div className="flex justify-center">
+              <Card className={`w-48 h-64 flex items-center justify-center ${
+                playerCard?.suit === '♥' || playerCard?.suit === '♦' 
+                  ? 'text-red-500' 
+                  : 'text-slate-900'
+              }`}>
+                {playerCard ? (
+                  <div className="text-4xl font-bold">
+                    {playerCard.value}{playerCard.suit}
+                  </div>
+                ) : (
+                  <div className="text-slate-400">No card</div>
+                )}
+              </Card>
+            </div>
+          </div>
+
+          {/* Computer Side */}
+          <div className="space-y-4">
+            <h2 className="text-xl text-center text-white">Computer's Card</h2>
+            <div className="flex justify-center">
+              <Card className={`w-48 h-64 flex items-center justify-center ${
+                computerCard?.suit === '♥' || computerCard?.suit === '♦' 
+                  ? 'text-red-500' 
+                  : 'text-slate-900'
+              }`}>
+                {computerCard ? (
+                  <div className="text-4xl font-bold">
+                    {computerCard.value}{computerCard.suit}
+                  </div>
+                ) : (
+                  <div className="text-slate-400">No card</div>
+                )}
+              </Card>
+            </div>
+          </div>
+        </div>
+
+        {/* Game Controls */}
+        <div className="flex justify-center gap-4">
+          <Button 
+            size="lg"
+            onClick={startGame}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            Start New Game
+          </Button>
+          <Button 
+            size="lg"
+            onClick={drawCards}
+            disabled={playerDeck.length === 0}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Draw Cards
+          </Button>
+        </div>
+
+        {/* Deck Status */}
+        <div className="text-center text-slate-300">
+          Cards remaining: {playerDeck.length}
+        </div>
+      </div>
+    </main>
+  )
 }
