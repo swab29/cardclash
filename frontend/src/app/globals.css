@@ -9,7 +9,7 @@ body {
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
@@ -85,4 +85,25 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@keyframes diceRoll {
+  0% { transform: rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  60% { transform: rotate(720deg); }
+  100% { transform: rotate(720deg); }
+}
+
+@keyframes winningCard {
+  0% { transform: scale(1); box-shadow: 0 0 0 rgba(59, 130, 246, 0); }
+  50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+  100% { transform: scale(1); box-shadow: 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+.dice-rolling {
+  animation: diceRoll 1s ease-out;
+}
+
+.winning-card {
+  animation: winningCard 1.5s ease-in-out infinite;
 }
